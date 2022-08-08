@@ -5,6 +5,25 @@
         .hidden {
             display: none;
         }
+        ul{
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          width: 30%;
+        }
+        li {
+          clear: both;
+        }
+        li button {
+          -webkit-appearance: none;
+          border: none;
+          outline: none;
+          color: red;
+          float: right;
+          cursor: pointer;
+          font-size: 20px;
+          background-color: white;
+        }
       </style>
   </head>
   <body>
@@ -18,11 +37,59 @@
 
     <ul id="todos">
       {% for d in data %}
-      <li>{{ d.description }}</li>
+      <li>
+        <input class="check-completed" data-id="{{ d.id }}" type="checkbox" {% if d.completed %} checked {% endif %}> 
+        {{ d.description }} 
+        <button class="delete-todo" data-id="{{ d.id }}" onclick="delete_todo('{{d.id}}')">&cross;</button>
+      </li>
       {% endfor %}
     </ul>
 
     <script>
+
+      const checkboxes = document.querySelectorAll('.check-completed');
+      for (let i = 0 ; i < checkboxes.length ; i++) {
+        const checkbox = checkboxes[i];
+        checkbox.onchange = function(e) {
+          console.log('event',e);
+          const newCompleted = e.target.checked;
+          console.log(newCompleted);
+          const todoId = e.target.dataset['id'];
+          fetch ('/todos/' + todoId + '/set-completed', {
+              method: 'POST',
+              body:JSON.stringify( { 'completed' : newCompleted 
+              }),
+              headers:  {
+                'Content-Type': 'application/json'
+              }
+          })
+        .then(function(){
+          document.getElementById('error').className = 'hidden';
+        })
+          .catch(function() {
+            document.getElementById('error').className = '';
+          })
+        }
+      }
+
+      function delete_todo(todoId) {
+        console.log('event', todoId);
+
+        fetch ('/todos/' + todoId + '/delete-todo', {
+              method: 'GET',
+              headers:  {
+                'Content-Type': 'application/json'
+              }
+          })
+          .then(function(){
+            document.getElementById('error').className = 'hidden';
+          })
+          .catch(function() {
+            document.getElementById('error').className = '';
+          })
+        
+      }
+
       document.getElementById("form").onsubmit = function(e){
         e.preventDefault();
 
